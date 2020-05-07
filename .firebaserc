@@ -1,0 +1,11 @@
+{
+  "targets": {
+    "angular-udemy-36ef3": {
+      "hosting": {
+        "firestore": [
+          "angular-udemy-36ef3"
+        ]
+      }
+    }
+  }
+}
