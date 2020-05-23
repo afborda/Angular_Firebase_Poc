@@ -21,6 +21,28 @@ export class ProductService {
   }
 
   addProduct(p: Product) {
-    return this.productsCollection.add(p);
+    p.id = this.angularfirestor.createId();
+    return this.productsCollection.doc(p.id).set(p);
+
+    // return this.productsCollection.add(p);
+  }
+
+  deleteProduc(p: Product) {
+    return this.productsCollection.doc(p.id).delete();
+  }
+
+  updateProduct(p: Product) {
+    return this.productsCollection.doc(p.id).set(p);
+  }
+
+  searchByName(name: string): Observable<Product[]> {
+    return this.angularfirestor
+      .collection<Product>('products', (ref) =>
+        ref
+          .orderBy('name')
+          .startAt(name)
+          .endAt(name + '\uf8ff')
+      )
+      .valueChanges();
   }
 }

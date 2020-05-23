@@ -1,8 +1,8 @@
+import { Product } from './../models/product.model';
 import { ProductService } from './../product.service';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Product } from '../models/product.model';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -12,14 +12,17 @@ import { Observable } from 'rxjs';
 })
 export class ProductsComponent implements OnInit {
   products$: Observable<Product[]>;
+  filterProducts$: Observable<Product[]>;
 
   displayedColumns = ['name', 'price', 'stock', 'operations'];
+
+  @ViewChild('name') productName: ElementRef;
 
   productForm = this.fb.group({
     id: [undefined],
     name: ['', [Validators.required]],
-    stock: [0, [Validators.required]],
-    price: [0, [Validators.required]],
+    stock: ['', [Validators.required]],
+    price: ['', [Validators.required]],
   });
 
   constructor(
@@ -37,7 +40,7 @@ export class ProductsComponent implements OnInit {
     if (!p.id) {
       this.addProduct(p);
     } else {
-      this.editProduct(p);
+      this.updateProduct(p);
     }
   }
 
@@ -46,6 +49,13 @@ export class ProductsComponent implements OnInit {
       .addProduct(p)
       .then(() => {
         this.snackBar.open('Product add', 'OK', { duration: 2000 });
+        this.productForm.reset({
+          name: '',
+          stock: '',
+          price: '',
+          id: undefined,
+        });
+        this.productName.nativeElement.focus();
       })
       .catch(() => {
         this.snackBar.open('Erros on submiting the Product', 'OK', {
@@ -54,5 +64,48 @@ export class ProductsComponent implements OnInit {
       });
   }
 
-  editProduct(p: Product) {}
+  updateProduct(p: Product) {
+    this.productService
+      .updateProduct(p)
+      .then(() => {
+        this.snackBar.open('Product Updated', 'ok', { duration: 2000 });
+        this.productForm.reset({
+          name: '',
+          stock: '',
+          price: '',
+          id: undefined,
+        });
+
+        this.productName.nativeElement.focus();
+      })
+      .catch((err) => {
+        console.log(err);
+        this.snackBar.open('Error Update the Product!');
+      });
+  }
+
+  edit(p: Product) {
+    this.productForm.setValue(p);
+  }
+
+  del(p: Product) {
+    this.productService
+      .deleteProduc(p)
+      .then(() => {
+        this.snackBar.open('Product has been removed', 'ok', {
+          duration: 2000,
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+
+        this.snackBar.open('Error when trying to removed the Product ', 'ok', {
+          duration: 2000,
+        });
+      });
+  }
+
+  filter(event) {
+    this.filterProducts$ = this.productService.searchByName(event.target.value);
+  }
 }
